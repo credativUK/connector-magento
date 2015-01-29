@@ -354,8 +354,9 @@ class PartnerImportMapper(ImportMapper):
         if binding_id:
             storeview = self.session.browse('magento.storeview',
                                             binding_id)
-            if storeview.store_id:
+            if storeview.store_id and storeview.store_id.company_id:
                 return {'company_id': storeview.store_id.company_id.id}
+        return {'company_id': False}
 
     @mapping
     def lang(self, record):
@@ -523,7 +524,7 @@ class BaseAddressImportMapper(ImportMapper):
         if prefix:
             title_ids = self.session.search('res.partner.title',
                                             [('domain', '=', 'contact'),
-                                             ('shortcut', 'ilike', prefix)])
+                                             ('shortcut', '=ilike', prefix)])
             if title_ids:
                 title_id = title_ids[0]
             else:
@@ -532,6 +533,19 @@ class BaseAddressImportMapper(ImportMapper):
                                                 'shortcut': prefix,
                                                 'name': prefix})
         return {'title': title_id}
+
+    @only_create
+    @mapping
+    def company_id(self, record):
+        parent_id = record.get('parent_id')
+        if parent_id:
+            parent = self.session.browse('res.partner', parent_id)
+            if parent.company_id:
+                return {'company_id': parent.company_id.id}
+            else:
+                return {'company_id': False}
+        # Don't return anything, we are merging into an existing partner
+        return
 
 
 @magento
