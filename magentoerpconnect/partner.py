@@ -643,6 +643,15 @@ class AddressImport(MagentoImportSynchronizer):
 
     def _create(self, data):
         data = self._define_partner_relationship(data)
+
+        # changing an address results in a new address being created, rebind
+        if data.get('openerp_id'):
+            binder = self.get_binder_for_model('magento.address')
+            old_backend_id = binder.to_backend(data['openerp_id'], wrap=True)
+            if old_backend_id:
+                binding_id = binder.to_openerp(old_backend_id)
+                self._update(binding_id, data)
+                return binding_id
         return super(AddressImport, self)._create(data)
 
 
