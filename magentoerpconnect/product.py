@@ -55,6 +55,13 @@ from .related_action import unwrap_binding
 
 _logger = logging.getLogger(__name__)
 
+# Emulate request to bypass cloudflare restrictions
+GET_HEADERS = {'Accept-Language': 'en-US,en;q=0.5',
+'Accept-Encoding': 'gzip, deflate, br',
+'Connection': 'keep-alive',
+'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+'User-Agent': "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0"
+}
 
 def chunks(items, length):
     for index in xrange(0, len(items), length):
@@ -366,6 +373,8 @@ class CatalogImageImporter(ImportSynchronizer):
                     '%s:%s' % (self.backend_record.auth_basic_username,
                                self.backend_record.auth_basic_password))
                 request.add_header("Authorization", "Basic %s" % base64string)
+            for k, v in GET_HEADERS.iteritems():
+                request.add_header(k, v)
             binary = urllib2.urlopen(request)
         except urllib2.HTTPError as err:
             if err.code == 404:
